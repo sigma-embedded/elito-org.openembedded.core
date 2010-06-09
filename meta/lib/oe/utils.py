@@ -1,4 +1,8 @@
 import subprocess
+import pipes
+
+sh_quote = pipes.quote
+
 
 def read_file(filename):
     try:
