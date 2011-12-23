@@ -35,7 +35,7 @@ SYSTEMTAP_libc-musl = ""
 SYSTEMTAP_nios2 = ""
 
 # lttng-ust uses sched_getcpu() which is not there on for some platforms.
-LTTNGUST = "lttng-ust"
+LTTNGUST = "${@bb.utils.contains('MACHINE_FEATURES', 'screen', 'lttng-ust', '', d)}"
 LTTNGUST_libc-musl = ""
 LTTNGUST_riscv64 = ""
 
