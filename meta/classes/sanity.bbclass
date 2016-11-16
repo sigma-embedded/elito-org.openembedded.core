@@ -622,12 +622,6 @@ def check_sanity_version_change(status, d):
     if not check_app_exists("${MAKE}", d):
         missing = missing + "GNU make,"
 
-    if not check_app_exists('${BUILD_CC}', d):
-        missing = missing + "C Compiler (%s)," % d.getVar("BUILD_CC")
-
-    if not check_app_exists('${BUILD_CXX}', d):
-        missing = missing + "C++ Compiler (%s)," % d.getVar("BUILD_CXX")
-
     required_utilities = d.getVar('SANITY_REQUIRED_UTILITIES')
 
     for util in required_utilities.split():
