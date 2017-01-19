@@ -2,23 +2,14 @@ SUMMARY = "Provides support for the Tag Image File Format (TIFF)"
 LICENSE = "BSD-2-Clause"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=34da3db46fab7501992f9615d7e158cf"
 
+CVE_PRODUCT = "libtiff"
+
 SRC_URI = "http://download.osgeo.org/libtiff/tiff-${PV}.tar.gz \
            file://libtool2.patch \
-           file://CVE-2015-8665_8683.patch \
-           file://CVE-2015-8781.patch \
-           file://CVE-2015-8784.patch \
-           file://CVE-2016-3186.patch \
-           file://CVE-2016-5321.patch \
-           file://CVE-2016-5323.patch \
-           file://CVE-2016-3945.patch \
-           file://CVE-2016-3990.patch \
-           file://CVE-2016-3991.patch \
-           file://CVE-2016-3623.patch \
-           file://CVE-2016-3622.patch \
           "
 
-SRC_URI[md5sum] = "d1d2e940dea0b5ad435f21f03d96dd72"
-SRC_URI[sha256sum] = "4d57a50907b510e3049a4bba0d7888930fdfc16ce49f1bf693e5b6247370d68c"
+SRC_URI[md5sum] = "77ae928d2c6b7fb46a21c3a29325157b"
+SRC_URI[sha256sum] = "9f43a2cfb9589e5cecaa66e16bf87f814c945f22df7ba600d63aac4632c4f019"
 
 # exclude betas
 UPSTREAM_CHECK_REGEX = "tiff-(?P<pver>\d+(\.\d+)+).tar"
