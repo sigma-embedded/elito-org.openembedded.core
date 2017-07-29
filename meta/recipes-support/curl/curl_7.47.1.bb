@@ -15,6 +15,18 @@ SRC_URI += " file://configure_ac.patch \
              file://CVE-2016-5420.patch \
              file://CVE-2016-5421.patch \
              file://CVE-2016-7141.patch \
+             file://CVE-2016-8615.patch \
+             file://CVE-2016-8616.patch \
+             file://CVE-2016-8617.patch \
+             file://CVE-2016-8618.patch \
+             file://CVE-2016-8619.patch \
+             file://CVE-2016-8620.patch \
+             file://CVE-2016-8621.patch \
+             file://CVE-2016-8622.patch \
+             file://CVE-2016-8623.patch \
+             file://CVE-2016-8624.patch \
+             file://CVE-2016-8625.patch \
+             file://url-remove-unconditional-idn2.h-include.patch \
            "
 
 SRC_URI[md5sum] = "9ea3123449439bbd960cd25cf98796fb"
