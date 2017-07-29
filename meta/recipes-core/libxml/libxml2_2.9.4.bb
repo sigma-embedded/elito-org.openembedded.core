@@ -23,6 +23,11 @@ SRC_URI = "ftp://xmlsoft.org/libxml2/libxml2-${PV}.tar.gz;name=libtar \
            file://libxml2-CVE-2016-5131.patch \
            file://libxml2-CVE-2016-4658.patch \
            file://libxml2-fix_NULL_pointer_derefs.patch \
+           file://libxml2-fix_and_simplify_xmlParseStartTag2.patch \
+           file://libxml2-CVE-2017-9047_CVE-2017-9048.patch \
+           file://libxml2-CVE-2017-9049_CVE-2017-9050.patch \
+           file://libxml2-CVE-2017-5969.patch \
+           file://libxml2-CVE-2017-0663.patch \
            file://CVE-2016-9318.patch \
           "
 
