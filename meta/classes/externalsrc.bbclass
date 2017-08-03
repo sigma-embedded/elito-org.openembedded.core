@@ -109,6 +109,8 @@ python () {
             if local_srcuri and task in fetch_tasks:
                 continue
             bb.build.deltask(task, d)
+            if task == 'do_fetch':
+                d.prependVarFlag('do_prepare_recipe_sysroot', 'prefuncs', 'clean_recipe_sysroot')
 
         d.prependVarFlag('do_compile', 'prefuncs', "externalsrc_compile_prefunc ")
         d.prependVarFlag('do_configure', 'prefuncs', "externalsrc_configure_prefunc ")
