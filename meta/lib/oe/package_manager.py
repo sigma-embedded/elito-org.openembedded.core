@@ -585,7 +585,7 @@ class RpmPM(PackageManager):
 
         output = self._invoke_dnf((["--skip-broken"] if attempt_only else []) +
                          (["-x", ",".join(exclude_pkgs)] if len(exclude_pkgs) > 0 else []) +
-                         (["--setopt=install_weak_deps=False"] if self.d.getVar('NO_RECOMMENDATIONS') == 1 else []) +
+                         (["--setopt=install_weak_deps=False"] if self.d.getVar('NO_RECOMMENDATIONS') == "1" else []) +
                          (["--nogpgcheck"] if self.d.getVar('RPM_SIGN_PACKAGES') != '1' else ["--setopt=gpgcheck=True"]) +
                          ["install"] +
                          pkgs)
@@ -650,7 +650,7 @@ class RpmPM(PackageManager):
                             symlinks=True)
 
     def list_installed(self):
-        output = self._invoke_dnf(["repoquery", "--installed", "--queryformat", "Package: %{name} %{arch} %{version} %{sourcerpm}\nDependencies:\n%{requires}\nRecommendations:\n%{recommends}\nDependenciesEndHere:\n"],
+        output = self._invoke_dnf(["repoquery", "--installed", "--queryformat", "Package: %{name} %{arch} %{version} %{name}-%{version}-%{release}.%{arch}.rpm\nDependencies:\n%{requires}\nRecommendations:\n%{recommends}\nDependenciesEndHere:\n"],
                                   print_output = False)
         packages = {}
         current_package = None
@@ -662,8 +662,8 @@ class RpmPM(PackageManager):
                 current_package = package_info[0]
                 package_arch = package_info[1]
                 package_version = package_info[2]
-                package_srpm = package_info[3]
-                packages[current_package] = {"arch":package_arch, "ver":package_version, "filename":package_srpm}
+                package_rpm = package_info[3]
+                packages[current_package] = {"arch":package_arch, "ver":package_version, "filename":package_rpm}
                 current_deps = []
             elif line.startswith("Dependencies:"):
                 current_state = "dependencies"
