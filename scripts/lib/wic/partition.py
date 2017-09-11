@@ -195,6 +195,17 @@ class Partition():
                            "larger (%d kB) than its allowed size %d kB" %
                            (self.mountpoint, self.size, self.fixed_size))
 
+    def _extend_rootfs_image(self, rootfs):
+        """Enlarges the rootfs so that it fulfills size/overhead-factor
+        constraints"""
+
+        sz = (os.stat(rootfs).st_size + 1023) // 1024
+        pad_sz = self.get_rootfs_size(sz)
+
+        if pad_sz > sz:
+            with open(rootfs, 'a') as f:
+                os.ftruncate(f.fileno(), pad_sz * 1024)
+
     def prepare_rootfs(self, cr_workdir, oe_builddir, rootfs_dir,
                        native_sysroot):
         """
@@ -337,6 +348,8 @@ class Partition():
         squashfs_cmd = "mksquashfs %s %s %s" % \
                        (rootfs_dir, rootfs, extraopts)
         exec_native_cmd(squashfs_cmd, native_sysroot, pseudo=pseudo)
+
+        self._extend_rootfs_image(rootfs)
 
     def prepare_empty_partition_ext(self, rootfs, oe_builddir,
                                     native_sysroot):
