@@ -195,16 +195,40 @@ class Partition():
                            "larger (%d kB) than its allowed size %d kB" %
                            (self.mountpoint, self.size, self.fixed_size))
 
-    def _extend_rootfs_image(self, rootfs):
-        """Enlarges the rootfs so that it fulfills size/overhead-factor
-        constraints"""
+    def _allocate_rootfs_image(self, rootfs, rootfs_dir):
+        """Allocates space in the rootfs so that it fulfills size/overhead-factor
+        constraints.  Method returns file size in KiB."""
+
+        DU_FLAGS = {
+            'msdos' : '-bks',
+            'vfat' : '-bks',
+        }
+
+        flags = DU_FLAGS.get(self.fstype, '-kb')
+        du_cmd = "du %s %s" % (flags, rootfs_dir)
+        out = exec_cmd(du_cmd)
+        sz = int(out.split()[0])
+
+        pad_sz = self.get_rootfs_size(sz)
+
+        with open(rootfs, "w") as f:
+            os.ftruncate(f.fileno(), pad_sz * 1024)
+
+        return pad_sz
+
+    def _reallocate_rootfs_image(self, rootfs):
+        """Reallocates space for an already existing rootfs by applying
+        --size, --fixed-sized and related constraints.  Returns file size in KiB"""
 
         sz = (os.stat(rootfs).st_size + 1023) // 1024
         pad_sz = self.get_rootfs_size(sz)
 
         if pad_sz > sz:
-            with open(rootfs, 'a') as f:
+            with open(rootfs, "a") as f:
                 os.ftruncate(f.fileno(), pad_sz * 1024)
+                sz = pad_sz
+
+        return sz
 
     def prepare_rootfs(self, cr_workdir, oe_builddir, rootfs_dir,
                        native_sysroot):
@@ -244,6 +268,8 @@ class Partition():
                                '--overhead-factor will be applied')
                 self.size = int(round(float(rsize_bb)))
 
+        self._rootfs_size_kib = self._allocate_rootfs_image(rootfs, rootfs_dir);
+
         prefix = "ext" if self.fstype.startswith("ext") else self.fstype
         method = getattr(self, "prepare_rootfs_" + prefix)
         method(rootfs, oe_builddir, rootfs_dir, native_sysroot, pseudo)
@@ -259,15 +285,6 @@ class Partition():
         """
         Prepare content for an ext2/3/4 rootfs partition.
         """
-        du_cmd = "du -ks %s" % rootfs_dir
-        out = exec_cmd(du_cmd)
-        actual_rootfs_size = int(out.split()[0])
-
-        rootfs_size = self.get_rootfs_size(actual_rootfs_size)
-
-        with open(rootfs, 'w') as sparse:
-            os.ftruncate(sparse.fileno(), rootfs_size * 1024)
-
         extraopts = self.mkfs_extraopts or "-F -i 8192"
 
         label_str = ""
@@ -288,21 +305,12 @@ class Partition():
 
         Currently handles ext2/3/4 and btrfs.
         """
-        du_cmd = "du -ks %s" % rootfs_dir
-        out = exec_cmd(du_cmd)
-        actual_rootfs_size = int(out.split()[0])
-
-        rootfs_size = self.get_rootfs_size(actual_rootfs_size)
-
-        with open(rootfs, 'w') as sparse:
-            os.ftruncate(sparse.fileno(), rootfs_size * 1024)
-
         label_str = ""
         if self.label:
             label_str = "-L %s" % self.label
 
         mkfs_cmd = "mkfs.%s -b %d -r %s %s %s %s" % \
-            (self.fstype, rootfs_size * 1024, rootfs_dir, label_str,
+            (self.fstype, self._rootfs_size_kib * 1024, rootfs_dir, label_str,
              self.mkfs_extraopts, rootfs)
         exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
 
@@ -311,11 +319,9 @@ class Partition():
         """
         Prepare content for a msdos/vfat rootfs partition.
         """
-        du_cmd = "du -bks %s" % rootfs_dir
-        out = exec_cmd(du_cmd)
-        blocks = int(out.split()[0])
-
-        rootfs_size = self.get_rootfs_size(blocks)
+        # 'mkdosfs' does not work with already existing images; just
+        # use the calculated image size and remove the empty file
+        os.unlink(rootfs)
 
         label_str = "-n boot"
         if self.label:
@@ -328,7 +334,7 @@ class Partition():
         extraopts = self.mkfs_extraopts or '-S 512'
 
         dosfs_cmd = "mkdosfs %s %s %s -C %s %d" % \
-                    (label_str, size_str, extraopts, rootfs, rootfs_size)
+                    (label_str, size_str, extraopts, rootfs, self._rootfs_size_kib)
         exec_native_cmd(dosfs_cmd, native_sysroot)
 
         mcopy_cmd = "mcopy -i %s -s %s/* ::/" % (rootfs, rootfs_dir)
@@ -344,12 +350,17 @@ class Partition():
         """
         Prepare content for a squashfs rootfs partition.
         """
+        # squashfs is special; we have to extend the image after
+        # 'mksquashfs' because data will be compressed and much
+        # smaller than the calculated size
+        os.unlink(rootfs)
+
         extraopts = self.mkfs_extraopts or '-noappend'
         squashfs_cmd = "mksquashfs %s %s %s" % \
                        (rootfs_dir, rootfs, extraopts)
         exec_native_cmd(squashfs_cmd, native_sysroot, pseudo=pseudo)
 
-        self._extend_rootfs_image(rootfs)
+        self._reallocate_rootfs_image(rootfs)
 
     def prepare_empty_partition_ext(self, rootfs, oe_builddir,
                                     native_sysroot):
