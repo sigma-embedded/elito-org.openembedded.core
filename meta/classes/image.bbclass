@@ -145,15 +145,6 @@ inherit ${IMAGE_TYPE_vm}
 IMAGE_TYPE_container = '${@bb.utils.contains("IMAGE_FSTYPES", "container", "image-container", "", d)}'
 inherit ${IMAGE_TYPE_container}
 
-def build_uboot(d):
-    if 'u-boot' in (d.getVar('IMAGE_FSTYPES') or ''):
-        return "image_types_uboot"
-    else:
-        return ""
-
-IMAGE_TYPE_uboot = "${@build_uboot(d)}"
-inherit ${IMAGE_TYPE_uboot}
-
 IMAGE_TYPE_wic = "image_types_wic"
 inherit ${IMAGE_TYPE_wic}
 
@@ -453,7 +444,7 @@ python () {
 
         rm_tmp_images = set()
         def gen_conversion_cmds(bt):
-            for ctype in ctypes:
+            for ctype in sorted(ctypes):
                 if bt.endswith("." + ctype):
                     type = bt[0:-len(ctype) - 1]
                     if type.startswith("debugfs_"):
