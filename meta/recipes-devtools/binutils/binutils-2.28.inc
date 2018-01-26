@@ -43,6 +43,40 @@ SRC_URI = "\
      file://CVE-2017-6969_2.patch \
      file://CVE-2017-7209.patch \
      file://CVE-2017-7210.patch \
+     file://CVE-2017-7223.patch \
+     file://CVE-2017-7614.patch \
+     file://CVE-2017-8393.patch \
+     file://CVE-2017-8394.patch \
+     file://CVE-2017-8395.patch \
+     file://CVE-2017-8396_8397.patch \
+     file://CVE-2017-8398.patch \
+     file://CVE-2017-8421.patch \
+     file://CVE-2017-9038_9044.patch \
+     file://CVE-2017-9039.patch \
+     file://CVE-2017-9040_9042.patch \
+     file://CVE-2017-9742.patch \
+     file://CVE-2017-9744.patch \
+     file://CVE-2017-9745.patch \
+     file://CVE-2017-9746.patch \
+     file://CVE-2017-9747.patch \
+     file://CVE-2017-9748.patch \
+     file://CVE-2017-9749.patch \
+     file://CVE-2017-9750.patch \
+     file://CVE-2017-9751.patch \
+     file://CVE-2017-9752.patch \
+     file://CVE-2017-9753.patch \
+     file://CVE-2017-9755.patch \
+     file://CVE-2017-9756.patch \
+     file://CVE-2017-9954.patch \
+     file://CVE-2017-9955_1.patch \
+     file://CVE-2017-9955_2.patch \
+     file://CVE-2017-9955_3.patch \
+     file://CVE-2017-9955_4.patch \
+     file://CVE-2017-9955_5.patch \
+     file://CVE-2017-9955_6.patch \
+     file://CVE-2017-9955_7.patch \
+     file://CVE-2017-9955_8.patch \
+     file://CVE-2017-9955_9.patch \
 "
 S  = "${WORKDIR}/git"
 
