@@ -26,7 +26,7 @@ class Signing(oeSelfTest):
         cls.pub_key_path = os.path.join(cls.testlayer_path, 'files', 'signing', "key.pub")
         cls.secret_key_path = os.path.join(cls.testlayer_path, 'files', 'signing', "key.secret")
 
-        runCmd('gpg --homedir %s --import %s %s' % (cls.gpg_dir, cls.pub_key_path, cls.secret_key_path))
+        runCmd('gpg --batch --homedir %s --import %s %s' % (cls.gpg_dir, cls.pub_key_path, cls.secret_key_path))
 
     @classmethod
     def tearDownClass(cls):
@@ -104,13 +104,7 @@ class Signing(oeSelfTest):
         self.add_command_to_tearDown('bitbake -c clean %s' % test_recipe)
         self.add_command_to_tearDown('rm -rf %s' % sstatedir)
 
-        # Determine the pub key signature
-        ret = runCmd('gpg --homedir %s --list-keys' % self.gpg_dir)
-        pub_key = re.search(r'^pub\s+\S+/(\S+)\s+', ret.output, re.M)
-        self.assertIsNotNone(pub_key, 'Failed to determine the public key signature.')
-        pub_key = pub_key.group(1)
-
-        feature = 'SSTATE_SIG_KEY ?= "%s"\n' % pub_key
+        feature = 'SSTATE_SIG_KEY ?= "testuser"\n'
         feature += 'SSTATE_SIG_PASSPHRASE ?= "test123"\n'
         feature += 'SSTATE_VERIFY_SIG ?= "1"\n'
         feature += 'GPG_PATH = "%s"\n' % self.gpg_dir
