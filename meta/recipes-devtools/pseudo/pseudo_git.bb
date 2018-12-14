@@ -6,6 +6,7 @@ SRC_URI = "git://git.yoctoproject.org/pseudo \
            file://fallback-group \
            file://moreretries.patch \
            file://toomanyfiles.patch \
+           file://0001-use-sys-xattr.h-not-attr-xattr.h.patch \
            "
 
 SRCREV = "6294b344e5140f5467e6860f45a174440015304e"

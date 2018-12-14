@@ -1,0 +1,54 @@
+From 7132668ce2409e0919a79d6f236827665f068427 Mon Sep 17 00:00:00 2001
+From: Enrico Scholz <enrico.scholz@sigma-chemnitz.de>
+Date: Fri, 14 Dec 2018 18:41:04 +0100
+Subject: [PATCH, pseudo] use <sys/xattr.h>, not <attr/xattr.h>
+
+<attr/xattr.h> has been removed from recent attr package:
+
+   The xattr syscalls are provided by glibc since ages, so there is
+   no need to use the indirect system call "syscall" anymore. This
+   removes the need for the <attr/xattr.h> header; use <sys/xattr.h>
+   instead.
+
+   http://git.savannah.nongnu.org/cgit/attr.git/commit/include?id=7921157890d07858d092f4003ca4c6bae9fd2c38
+
+For Linux, we have to include <attr/attributes.h> to define ENODATA.
+
+Signed-off-by: Enrico Scholz <enrico.scholz@sigma-chemnitz.de>
+---
+Upstream-Status: pending
+
+ ports/linux/subports         | 4 ++--
+ ports/linux/xattr/portdefs.h | 3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/ports/linux/subports b/ports/linux/subports
+index a29044a..44e0e9e 100755
+--- a/ports/linux/subports
++++ b/ports/linux/subports
+@@ -29,11 +29,11 @@ fi
+ if	$port_xattr; then
+ 	cat > dummy.c <<EOF
+ #include <sys/types.h>
+-#include <attr/xattr.h>
++#include <sys/xattr.h>
+ int i;
+ EOF
+ 	if ! ${CC} -c -o dummy.o dummy.c >/dev/null 2>&1; then
+-		echo >&2 "Warning: Can't compile trivial program using <attr/xattr.h>".
++		echo >&2 "Warning: Can't compile trivial program using <sys/xattr.h>".
+ 		echo >&2 "         xattr support will require that header."
+ 	fi
+ 	echo "linux/xattr"
+diff --git a/ports/linux/xattr/portdefs.h b/ports/linux/xattr/portdefs.h
+index 367ca60..bb577f1 100644
+--- a/ports/linux/xattr/portdefs.h
++++ b/ports/linux/xattr/portdefs.h
+@@ -1,2 +1,3 @@
+-#include <attr/xattr.h>
++#include <sys/xattr.h>
++#include <attr/attributes.h>
+ #include <stdint.h>
+-- 
+2.19.2
+
