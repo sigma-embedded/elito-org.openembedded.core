@@ -76,11 +76,9 @@ EXTRA_OEMAKE = "${@bb.utils.contains('PACKAGECONFIG', 'manpages', '', 'OE_DISABL
 
 export OE_LDFLAGS = "${LDFLAGS}"
 
-# openssl fails with ccache: https://bugzilla.yoctoproject.org/show_bug.cgi?id=12810
-CCACHE = ""
-
 TERMIO ?= "-DTERMIO"
 TERMIO_libc-musl = "-DTERMIOS"
+EXTRA_OECONF_append_libc-musl_powerpc64 = " no-asm"
 
 CFLAG = "${@oe.utils.conditional('SITEINFO_ENDIANNESS', 'le', '-DL_ENDIAN', '-DB_ENDIAN', d)} \
          ${TERMIO} ${CFLAGS} -Wall"
