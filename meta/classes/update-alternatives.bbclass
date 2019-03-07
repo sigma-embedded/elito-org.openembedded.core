@@ -131,14 +131,21 @@ def gen_updatealternativesvars(d):
 populate_packages[vardeps] += "${UPDALTVARS} ${@gen_updatealternativesvars(d)}"
 
 # We need to do the rename after the image creation step, but before
-# the split and strip steps..  packagecopy seems to be the earliest reasonable
-# place.
-python perform_packagecopy_append () {
-    if update_alternatives_enabled(d):
-        apply_update_alternative_renames(d)
-}
+# the split and strip steps..  PACKAGE_PREPROCESS_FUNCS is the right
+# place for that.
+PACKAGE_PREPROCESS_FUNCS += "apply_update_alternative_renames"
+python apply_update_alternative_renames () {
+    if not update_alternatives_enabled(d):
+       return
 
-def apply_update_alternative_renames(d):
+    import re
+
+    def update_files(alt_target, alt_target_rename, pkg, d):
+        f = d.getVar('FILES_' + pkg)
+        if f:
+            f = re.sub(r'(^|\s)%s(\s|$)' % re.escape (alt_target), r'\1%s\2' % alt_target_rename, f)
+            d.setVar('FILES_' + pkg, f)
+
     # Check for deprecated usage...
     pn = d.getVar('BPN')
     if d.getVar('ALTERNATIVE_LINKS') != None:
@@ -178,6 +185,7 @@ def apply_update_alternative_renames(d):
                     else:
                         bb.note('%s: Rename %s -> %s' % (pn, alt_target, alt_target_rename))
                         os.rename(src, dest)
+                        update_files(alt_target, alt_target_rename, pkg, d)
                 else:
                     bb.warn("%s: alternative target (%s or %s) does not exist, skipping..." % (pn, alt_target, alt_target_rename))
                     continue
@@ -204,6 +212,9 @@ def apply_update_alternative_renames(d):
                     os.unlink(src)
                 else:
                     bb.warn('%s: Unable to resolve dangling symlink: %s' % (pn, alt_target))
+                    continue
+            update_files(alt_target, alt_target_rename, pkg, d)
+}
 
 PACKAGESPLITFUNCS_prepend = "populate_packages_updatealternatives "
 

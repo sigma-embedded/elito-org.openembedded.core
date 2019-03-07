@@ -28,6 +28,12 @@ SRC_URI[sha256sum] = "fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed
 
 inherit lib_package multilib_header ptest
 
+PACKAGECONFIG ?= ""
+PACKAGECONFIG_class-native = ""
+PACKAGECONFIG_class-nativesdk = ""
+
+PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev-linux"
+
 B = "${WORKDIR}/build"
 do_configure[cleandirs] = "${B}"
 
@@ -190,19 +196,22 @@ FILES_libcrypto = "${libdir}/libcrypto${SOLIBS}"
 FILES_libssl = "${libdir}/libssl${SOLIBS}"
 FILES_openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
 FILES_${PN}-engines = "${libdir}/engines-1.1"
-FILES_${PN}-misc = "${libdir}/ssl-1.1/misc"
+FILES_${PN}-misc = "${libdir}/ssl-1.1/misc ${bindir}/c_rehash"
 FILES_${PN} =+ "${libdir}/ssl-1.1/*"
 FILES_${PN}_append_class-nativesdk = " ${SDKPATHNATIVE}/environment-setup.d/openssl.sh"
 
 CONFFILES_openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
 
 RRECOMMENDS_libcrypto += "openssl-conf"
-RDEPENDS_${PN}-bin = "perl"
 RDEPENDS_${PN}-misc = "perl"
-RDEPENDS_${PN}-ptest += "openssl-bin perl perl-modules bash python"
+RDEPENDS_${PN}-ptest += "openssl-bin perl perl-modules bash"
 
 RPROVIDES_openssl-conf = "openssl10-conf"
 RREPLACES_openssl-conf = "openssl10-conf"
 RCONFLICTS_openssl-conf = "openssl10-conf"
 
 BBCLASSEXTEND = "native nativesdk"
+
+inherit multilib_script
+
+MULTILIB_SCRIPTS = "${PN}-bin:${bindir}/c_rehash"

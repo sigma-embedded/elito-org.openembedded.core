@@ -440,7 +440,7 @@ class PackageManager(object, metaclass=ABCMeta):
                 continue
 
             if populate_sdk == 'host' and self.d.getVar('SDK_OS') == 'mingw32':
-                bb.warn("The postinstall intercept hook '%s' could not be executed due to missing wine support, details in %s/log.do_%s"
+                bb.note("The postinstall intercept hook '%s' could not be executed due to missing wine support, details in %s/log.do_%s"
                                 % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                 continue
 
@@ -455,7 +455,7 @@ class PackageManager(object, metaclass=ABCMeta):
                     bb.fatal("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                 elif populate_sdk == 'target':
                     if "qemuwrapper: qemu usermode is not supported" in e.output.decode("utf-8"):
-                        bb.warn("The postinstall intercept hook '%s' could not be executed due to missing qemu usermode support, details in %s/log.do_%s"
+                        bb.note("The postinstall intercept hook '%s' could not be executed due to missing qemu usermode support, details in %s/log.do_%s"
                                 % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                     else:
                         bb.fatal("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
@@ -1118,10 +1118,7 @@ class OpkgDpkgPM(PackageManager):
         tmp_dir = tempfile.mkdtemp()
         current_dir = os.getcwd()
         os.chdir(tmp_dir)
-        if self.d.getVar('IMAGE_PKGTYPE') == 'deb':
-            data_tar = 'data.tar.xz'
-        else:
-            data_tar = 'data.tar.gz'
+        data_tar = 'data.tar.xz'
 
         try:
             cmd = [ar_cmd, 'x', pkg_path]
@@ -1339,6 +1336,8 @@ class OpkgPM(OpkgDpkgPM):
         cmd = "%s %s" % (self.opkg_cmd, self.opkg_args)
         for exclude in (self.d.getVar("PACKAGE_EXCLUDE") or "").split():
             cmd += " --add-exclude %s" % exclude
+        for bad_recommendation in (self.d.getVar("BAD_RECOMMENDATIONS") or "").split():
+            cmd += " --add-ignore-recommends %s" % bad_recommendation
         cmd += " install "
         cmd += " ".join(pkgs)
 
@@ -1406,45 +1405,6 @@ class OpkgPM(OpkgDpkgPM):
 
     def list_installed(self):
         return OpkgPkgsList(self.d, self.target_rootfs, self.config_file).list_pkgs()
-
-    def handle_bad_recommendations(self):
-        bad_recommendations = self.d.getVar("BAD_RECOMMENDATIONS") or ""
-        if bad_recommendations.strip() == "":
-            return
-
-        status_file = os.path.join(self.opkg_dir, "status")
-
-        # If status file existed, it means the bad recommendations has already
-        # been handled
-        if os.path.exists(status_file):
-            return
-
-        cmd = "%s %s info " % (self.opkg_cmd, self.opkg_args)
-
-        with open(status_file, "w+") as status:
-            for pkg in bad_recommendations.split():
-                pkg_info = cmd + pkg
-
-                try:
-                    output = subprocess.check_output(pkg_info.split(), stderr=subprocess.STDOUT).strip().decode("utf-8")
-                except subprocess.CalledProcessError as e:
-                    bb.fatal("Cannot get package info. Command '%s' "
-                             "returned %d:\n%s" % (pkg_info, e.returncode, e.output.decode("utf-8")))
-
-                if output == "":
-                    bb.note("Ignored bad recommendation: '%s' is "
-                            "not a package" % pkg)
-                    continue
-
-                for line in output.split('\n'):
-                    if line.startswith("Status:"):
-                        status.write("Status: deinstall hold not-installed\n")
-                    else:
-                        status.write(line + "\n")
-
-                # Append a blank line after each package entry to ensure that it
-                # is separated from the following entry
-                status.write("\n")
 
     def dummy_install(self, pkgs):
         """
@@ -1530,7 +1490,7 @@ class OpkgPM(OpkgDpkgPM):
                      "trying to extract the package."  % pkg)
 
         tmp_dir = super(OpkgPM, self).extract(pkg, pkg_info)
-        bb.utils.remove(os.path.join(tmp_dir, "data.tar.gz"))
+        bb.utils.remove(os.path.join(tmp_dir, "data.tar.xz"))
 
         return tmp_dir
 

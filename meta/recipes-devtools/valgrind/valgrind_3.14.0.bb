@@ -58,6 +58,9 @@ COMPATIBLE_HOST_linux-muslx32 = 'null'
 COMPATIBLE_HOST_mipsarchr6 = 'null'
 COMPATIBLE_HOST_linux-gnun32 = 'null'
 
+# Disable for powerpc64 with musl
+COMPATIBLE_HOST_libc-musl_powerpc64 = 'null'
+
 inherit autotools ptest multilib_header
 
 EXTRA_OECONF = "--enable-tls --without-mpicc"
@@ -65,7 +68,6 @@ EXTRA_OECONF += "${@['--enable-only32bit','--enable-only64bit'][d.getVar('SITEIN
 
 # valgrind checks host_cpu "armv7*)", so we need to over-ride the autotools.bbclass default --host option
 EXTRA_OECONF_append_arm = " --host=armv7${HOST_VENDOR}-${HOST_OS}"
-TARGET_CC_ARCH_remove_arm = "${@get_mcpu(d)}"
 
 EXTRA_OEMAKE = "-w"
 
@@ -77,14 +79,6 @@ CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 # which fixes build path issue in DWARF.
 SELECTED_OPTIMIZATION = "${DEBUG_FLAGS}"
 
-def get_mcpu(d):
-    for arg in (d.getVar('TUNE_CCARGS') or '').split():
-        if arg.startswith('-mcpu='):
-            return arg
-        else:
-            continue
-    return ""
-
 do_configure_prepend () {
     rm -rf ${S}/config.h
     sed -i -e 's:$(abs_top_builddir):$(pkglibdir)/ptest:g' ${S}/none/tests/Makefile.am
@@ -95,8 +89,6 @@ do_install_append () {
     install -m 644 ${B}/default.supp ${D}/${libdir}/valgrind/
     oe_multilib_header valgrind/config.h
 }
-
-TUNE = "${@strip_mcpu(d)}"
 
 VALGRINDARCH ?= "${TARGET_ARCH}"
 VALGRINDARCH_aarch64 = "arm64"
