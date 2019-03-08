@@ -33,7 +33,8 @@ ERROR_QA ?= "dev-so debug-deps dev-deps debug-files arch pkgconfig la \
             perms dep-cmp pkgvarcheck perm-config perm-line perm-link \
             split-strip packages-list pkgv-undefined var-undefined \
             version-going-backwards expanded-d invalid-chars \
-            license-checksum dev-elf file-rdeps \
+            license-checksum dev-elf file-rdeps configure-unsafe \
+            configure-gettext \
             "
 # Add usrmerge QA check based on distro feature
 ERROR_QA_append = "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', ' usrmerge', '', d)}"
@@ -570,7 +571,7 @@ python populate_lic_qa_checksum() {
         bb.fatal("Fatal QA errors found, failing task.")
 }
 
-def package_qa_check_staged(path,d):
+def qa_check_staged(path,d):
     """
     Check staged la and pc files for common problems like references to the work
     directory.
@@ -589,20 +590,31 @@ def package_qa_check_staged(path,d):
     else:
         pkgconfigcheck = tmpdir
 
+    skip = (d.getVar('INSANE_SKIP') or "").split()
+    skip_la = False
+    if 'la' in skip:
+        bb.note("Recipe %s skipping qa checking: la" % d.getVar('PN'))
+        skip_la = True
+
+    skip_pkgconfig = False
+    if 'pkgconfig' in skip:
+        bb.note("Recipe %s skipping qa checking: pkgconfig" % d.getVar('PN'))
+        skip_pkgconfig = True
+
     # find all .la and .pc files
     # read the content
     # and check for stuff that looks wrong
     for root, dirs, files in os.walk(path):
         for file in files:
             path = os.path.join(root,file)
-            if file.endswith(".la"):
+            if file.endswith(".la") and not skip_la:
                 with open(path) as f:
                     file_content = f.read()
                     file_content = file_content.replace(recipesysroot, "")
                     if workdir in file_content:
                         error_msg = "%s failed sanity test (workdir) in path %s" % (file,root)
                         sane &= package_qa_handle_error("la", error_msg, d)
-            elif file.endswith(".pc"):
+            elif file.endswith(".pc") and not skip_pkgconfig:
                 with open(path) as f:
                     file_content = f.read()
                     file_content = file_content.replace(recipesysroot, "")
@@ -1034,8 +1046,7 @@ addtask do_package_qa_setscene
 
 python do_qa_staging() {
     bb.note("QA checking staging")
-
-    if not package_qa_check_staged(d.expand('${SYSROOT_DESTDIR}${libdir}'), d):
+    if not qa_check_staged(d.expand('${SYSROOT_DESTDIR}${libdir}'), d):
         bb.fatal("QA staging was broken by the package built above")
 }
 
@@ -1049,15 +1060,22 @@ python do_qa_configure() {
     configs = []
     workdir = d.getVar('WORKDIR')
 
-    if bb.data.inherits_class('autotools', d):
+    skip = (d.getVar('INSANE_SKIP') or "").split()
+    skip_configure_unsafe = False
+    if 'configure-unsafe' in skip:
+        bb.note("Recipe %s skipping qa checking: configure-unsafe" % d.getVar('PN'))
+        skip_configure_unsafe = True
+
+    if bb.data.inherits_class('autotools', d) and not skip_configure_unsafe:
         bb.note("Checking autotools environment for common misconfiguration")
         for root, dirs, files in os.walk(workdir):
             statement = "grep -q -F -e 'CROSS COMPILE Badness:' -e 'is unsafe for cross-compilation' %s" % \
                         os.path.join(root,"config.log")
             if "config.log" in files:
                 if subprocess.call(statement, shell=True) == 0:
-                    bb.fatal("""This autoconf log indicates errors, it looked at host include and/or library paths while determining system capabilities.
-Rerun configure task after fixing this.""")
+                    error_msg = """This autoconf log indicates errors, it looked at host include and/or library paths while determining system capabilities.
+Rerun configure task after fixing this."""
+                    package_qa_handle_error("configure-unsafe", error_msg, d)
 
             if "configure.ac" in files:
                 configs.append(os.path.join(root,"configure.ac"))
@@ -1068,8 +1086,14 @@ Rerun configure task after fixing this.""")
     # Check gettext configuration and dependencies are correct
     ###########################################################################
 
+    skip_configure_gettext = False
+    if 'configure-gettext' in skip:
+        bb.note("Recipe %s skipping qa checking: configure-gettext" % d.getVar('PN'))
+        skip_configure_gettext = True
+
     cnf = d.getVar('EXTRA_OECONF') or ""
-    if "gettext" not in d.getVar('P') and "gcc-runtime" not in d.getVar('P') and "--disable-nls" not in cnf:
+    if not ("gettext" in d.getVar('P') or "gcc-runtime" in d.getVar('P') or \
+            "--disable-nls" in cnf or skip_configure_gettext):
         ml = d.getVar("MLPREFIX") or ""
         if bb.data.inherits_class('cross-canadian', d):
             gt = "nativesdk-gettext"
@@ -1080,8 +1104,8 @@ Rerun configure task after fixing this.""")
             for config in configs:
                 gnu = "grep \"^[[:space:]]*AM_GNU_GETTEXT\" %s >/dev/null" % config
                 if subprocess.call(gnu, shell=True) == 0:
-                    bb.fatal("""%s required but not in DEPENDS for file %s.
-Missing inherit gettext?""" % (gt, config))
+                    error_msg = "%s required but not in DEPENDS for file %s. Missing inherit gettext?"
+                    package_qa_handle_error("configure-gettext", error_msg, d)
 
     ###########################################################################
     # Check unrecognised configure options (with a white list)
