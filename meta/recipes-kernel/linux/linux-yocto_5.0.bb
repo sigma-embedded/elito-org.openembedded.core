@@ -11,15 +11,15 @@ KBRANCH_qemux86  ?= "v5.0/standard/base"
 KBRANCH_qemux86-64 ?= "v5.0/standard/base"
 KBRANCH_qemumips64 ?= "v5.0/standard/mti-malta64"
 
-SRCREV_machine_qemuarm ?= "1fbecad0e6a68b6c57b4f6ef8207e7e90ea764a3"
-SRCREV_machine_qemuarm64 ?= "1a0da7e50b77c82841efb501c648dbaca699eac2"
-SRCREV_machine_qemumips ?= "d9dd6d4cfe689efd5cb7bbacd118a3888ac7c517"
-SRCREV_machine_qemuppc ?= "1a0da7e50b77c82841efb501c648dbaca699eac2"
-SRCREV_machine_qemux86 ?= "1a0da7e50b77c82841efb501c648dbaca699eac2"
-SRCREV_machine_qemux86-64 ?= "1a0da7e50b77c82841efb501c648dbaca699eac2"
-SRCREV_machine_qemumips64 ?= "5f072445126e6a9e44f9435a552f4fcf6fc15499"
-SRCREV_machine ?= "1a0da7e50b77c82841efb501c648dbaca699eac2"
-SRCREV_meta ?= "be627e4e38626c5e949de04c814ebd2487d5dd98"
+SRCREV_machine_qemuarm ?= "18a5ffa0e90184c8503ff1df45e4e5e501b1bab3"
+SRCREV_machine_qemuarm64 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+SRCREV_machine_qemumips ?= "c4d3cd6437329407e2cc7e3e4615769452d426b1"
+SRCREV_machine_qemuppc ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+SRCREV_machine_qemux86 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+SRCREV_machine_qemux86-64 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+SRCREV_machine_qemumips64 ?= "2468c20c15477ebe5ecd73c0e0162d7432149318"
+SRCREV_machine ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+SRCREV_meta ?= "705457837e7ddd27e4e2ecf6d3dbd255b1aaf848"
 
 # remap qemuarm to qemuarma15 for the 5.0 kernel
 # KMACHINE_qemuarm ?= "qemuarma15"
@@ -28,7 +28,7 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto.git;name=machine;branch=${KBRA
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-5.0;destsuffix=${KMETA}"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
-LINUX_VERSION ?= "5.0"
+LINUX_VERSION ?= "5.0.3"
 
 DEPENDS += "${@bb.utils.contains('ARCH', 'x86', 'elfutils-native', '', d)}"
 DEPENDS += "openssl-native util-linux-native"
@@ -40,7 +40,7 @@ KCONF_BSP_AUDIT_LEVEL = "2"
 
 KERNEL_DEVICETREE_qemuarm = "versatile-pb.dtb"
 
-COMPATIBLE_MACHINE = "qemuarm|qemuarm64|qemux86|qemuppc|qemumips|qemumips64|qemux86-64"
+COMPATIBLE_MACHINE = "qemuarm|qemuarmv5|qemuarm64|qemux86|qemuppc|qemumips|qemumips64|qemux86-64"
 
 # Functionality flags
 KERNEL_EXTRA_FEATURES ?= "features/netfilter/netfilter.scc"

@@ -23,6 +23,7 @@ SRC_URI += "file://touchscreen.rules \
            file://0004-rules-whitelist-hd-devices.patch \
            file://0005-rules-watch-metadata-changes-in-ide-devices.patch \
            file://0001-meson-declare-version.h-as-dep-for-various-targets-t.patch \
+           file://0001-meson-declare-version.h-as-dependency-for-systemd.patch \
            "
 
 # patches needed by musl
@@ -101,7 +102,6 @@ PACKAGECONFIG_remove_libc-musl = " \
     nss-mymachines \
     nss-resolve \
     resolved \
-    selinux \
     smack \
     sysusers \
     utmp \
@@ -149,6 +149,7 @@ PACKAGECONFIG[networkd] = "-Dnetworkd=true,-Dnetworkd=false"
 PACKAGECONFIG[nss] = "-Dnss-systemd=true,-Dnss-systemd=false"
 PACKAGECONFIG[nss-mymachines] = "-Dnss-mymachines=true,-Dnss-mymachines=false"
 PACKAGECONFIG[nss-resolve] = "-Dnss-resolve=true,-Dnss-resolve=false"
+PACKAGECONFIG[openssl] = "-Dopenssl=true,-Dopenssl=false,openssl"
 PACKAGECONFIG[pam] = "-Dpam=true,-Dpam=false,libpam,${PAM_PLUGINS}"
 PACKAGECONFIG[polkit] = "-Dpolkit=true,-Dpolkit=false"
 PACKAGECONFIG[portabled] = "-Dportabled=true,-Dportabled=false"
@@ -195,7 +196,6 @@ EXTRA_OEMESON += "-Dnobody-user=nobody \
 
 # Hardcode target binary paths to avoid using paths from sysroot
 EXTRA_OEMESON += "-Dkexec-path=${sbindir}/kexec \
-                  -Dkill-path=${base_bindir}/kill \
                   -Dkmod-path=${base_bindir}/kmod \
                   -Dmount-path=${base_bindir}/mount \
                   -Dquotacheck-path=${sbindir}/quotacheck \

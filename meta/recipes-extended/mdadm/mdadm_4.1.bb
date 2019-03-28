@@ -19,13 +19,14 @@ SRC_URI = "${KERNELORG_MIRROR}/linux/utils/raid/mdadm/${BPN}-${PV}.tar.xz \
            file://0001-fix-gcc-8-format-truncation-warning.patch \
 	   file://mdadm.init \
 	   file://mdmonitor.service \
+           file://0001-mdadm-gcc8-maybe-uninitialized-format-overflow-warni.patch \
            "
 SRC_URI[md5sum] = "51bf3651bd73a06c413a2f964f299598"
 SRC_URI[sha256sum] = "ab7688842908d3583a704d491956f31324c3a5fc9f6a04653cb75d19f1934f4a"
 
 inherit autotools-brokensep ptest systemd
 
-SYSTEMD_SERVICE_${PN} = "mdmonitor.service"
+SYSTEMD_SERVICE_${PN} = "mdmonitor.service mdmon@.service"
 SYSTEMD_AUTO_ENABLE = "disable"
 
 CFLAGS_append_toolchain-clang = " -Wno-error=address-of-packed-member"
@@ -39,6 +40,8 @@ CFLAGS_append_mipsarchn64 = ' -D__SANE_USERSPACE_TYPES__'
 CFLAGS_append_mipsarchn32 = ' -D__SANE_USERSPACE_TYPES__'
 
 EXTRA_OEMAKE = 'CHECK_RUN_DIR=0 CXFLAGS="${CFLAGS}"'
+
+DEBUG_OPTIMIZATION_append = " -Wno-error"
 
 do_compile() {
 	# Point to right sbindir
@@ -56,6 +59,7 @@ do_install_append() {
         install -m 644 ${S}/mdadm.conf-example ${D}${sysconfdir}/mdadm.conf
         install -d ${D}/${systemd_unitdir}/system
         install -m 644 ${WORKDIR}/mdmonitor.service ${D}/${systemd_unitdir}/system
+        install -m 644 ${S}/systemd/mdmon@.service ${D}/${systemd_unitdir}/system
         install -d ${D}/${sysconfdir}/init.d
         install -m 755 ${WORKDIR}/mdadm.init ${D}${sysconfdir}/init.d/mdmonitor
 }
