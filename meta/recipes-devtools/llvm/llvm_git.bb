@@ -12,25 +12,21 @@ DEPENDS = "libffi libxml2 zlib ninja-native llvm-native"
 
 RDEPENDS_${PN}_append_class-target = " ncurses-terminfo"
 
-inherit perlnative pythonnative cmake pkgconfig
+inherit cmake pkgconfig
 
 PROVIDES += "llvm${PV}"
 
 LLVM_RELEASE = "${PV}"
 LLVM_DIR = "llvm${LLVM_RELEASE}"
 
-# SRCREV is set to the revision of 8.0.0-rc2 tag, while latest release
-# tag is 7.0.1 as of Feb 18 2019, hence the need for UPSTREAM_CHECK_UNKNOWN
-# Remove the UPSTREAM_VERSION_UNKNOWN line once 8.0.0 final is tagged
-UPSTREAM_VERSION_UNKNOWN = "1"
-SRCREV = "98ebe7460199b9cd79eb562b5e8705ad28f5513f"
+SRCREV = "d2298e74235598f15594fe2c99bbac870a507c59"
 
 BRANCH = "release/${MAJOR_VERSION}.x"
 MAJOR_VERSION = "8"
 MINOR_VERSION = "0"
 PATCH_VERSION = "0"
 SOLIBVER = "1"
-PV = "${MAJOR_VERSION}.${MINOR_VERSION}"
+PV = "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
 SRC_URI = "git://github.com/llvm/llvm-project.git;branch=${BRANCH} \
            file://0001-llvm-TargetLibraryInfo-Undefine-libc-functions-if-th.patch \
            file://0002-llvm-allow-env-override-of-exe-path.patch \
@@ -74,6 +70,8 @@ EXTRA_OECMAKE += "-DLLVM_ENABLE_ASSERTIONS=OFF \
                   -DFFI_INCLUDE_DIR=$(pkg-config --variable=includedir libffi) \
                   -DLLVM_OPTIMIZED_TABLEGEN=ON \
                   -DLLVM_TARGETS_TO_BUILD='${LLVM_TARGETS}' \
+                  -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
+                  -DPYTHON_EXECUTABLE=${HOSTTOOLS_DIR}/python2 \
                   -G Ninja"
 
 EXTRA_OECMAKE_append_class-target = "\
@@ -87,6 +85,8 @@ EXTRA_OECMAKE_append_class-nativesdk = "\
                   -DLLVM_TABLEGEN=${STAGING_BINDIR_NATIVE}/llvm-tblgen${PV} \
                   -DLLVM_CONFIG_PATH=${STAGING_BINDIR_NATIVE}/llvm-config${PV} \
                  "
+
+CXXFLAGS_append_class-target_powerpc = " -mlongcall"
 
 do_configure_prepend() {
 # Fix paths in llvm-config
